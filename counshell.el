@@ -5,6 +5,8 @@
 ;; Author: Leandro Lisboa Penz <lpenz@lpenz.org>
 ;; Keywords: lisp, bash
 ;; Version: 0.1
+;; Package-Requires: ((emacs "24.3") (swiper "0.10.0") (counsel "0.10.0") (projectile "0.14.0"))
+;; URL: https://github.com/lpenz/counshell
 
 ;; This file is subject to the terms and conditions defined in
 ;; file 'LICENSE', which is part of this source code package.
@@ -23,6 +25,10 @@
 ;; - counshell-projectile-*: counshell-sh-* in the project's directory.
 
 ;;; Code:
+
+(require 'ivy)
+(require 'counsel)
+(require 'projectile)
 
 (provide 'counshell)
 
