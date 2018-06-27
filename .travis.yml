@@ -1,0 +1,8 @@
+---
+language: generic
+install:
+  - git clone https://github.com/abo-abo/swiper ../swiper
+  - git clone https://github.com/bbatsov/projectile ../projectile
+script:
+  - emacs --version
+  - emacs -batch -L ../swiper -L ../projectile --eval "(progn (setq byte-compile-error-on-warn t) (batch-byte-compile))" counshell.el
