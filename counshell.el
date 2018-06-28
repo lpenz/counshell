@@ -70,6 +70,9 @@
           (goto-char (point-min))
           (forward-line (- linenum 1)))))))
 
+(defun trim-left (str)
+  (replace-regexp-in-string "^[ \t\n\r]*" "" str))
+
 ;; Main function
 
 (defun counshell-sh-read (cmd initial func)
@@ -83,7 +86,7 @@
                       (when str
                         (cond
                          ((counshell-action-file str) ())
-                         ((counshell-action-file (string-trim-left str)) ())
+                         ((counshell-action-file (trim-left str)) ())
                          ((counshell-action-file-linenum (replace-regexp-in-string ":.*$" "" str)
                                                          (string-to-number (replace-regexp-in-string "^[^:]+:\\([0-9]+\\):.*" "\\1" str))) ())
                          ((counshell-action-file (replace-regexp-in-string ":.*$" "" str)) ())
