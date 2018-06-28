@@ -1,6 +1,18 @@
 ---
 language: generic
+env:
+  - EVM_EMACS=emacs-24.3-travis
+  - EVM_EMACS=emacs-24.4-travis
+  - EVM_EMACS=emacs-24.5-travis
+  - EVM_EMACS=emacs-25.1-travis
+  - EVM_EMACS=emacs-25.2-travis
+  - EVM_EMACS=emacs-26.1-travis
+  - EVM_EMACS=emacs-git-snapshot-travis
 install:
+  - curl -fsSkL https://raw.github.com/rejeep/evm/master/go | bash
+  - export PATH=$HOME/.evm/bin:$PATH
+  - evm config path /tmp
+  - evm install $EVM_EMACS --use --skip
   - git clone https://github.com/abo-abo/swiper ../swiper
   - git clone https://github.com/bbatsov/projectile ../projectile
 script:
