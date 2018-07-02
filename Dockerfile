@@ -23,13 +23,18 @@ ENV LC_ALL=en_US.UTF-8
 
 # Cask:
 ENV PATH="${PATH}:/opt/cask/bin"
+COPY Cask /tmp
 RUN set -e -x; \
     git clone https://github.com/cask/cask /opt/cask; \
-    cd /opt/cask; \
-    ./bin/cask upgrade-cask
+    cask upgrade-cask; \
+    cd /tmp; \
+    echo ';;; counshell.el --- ' >> counshell.el; \
+    echo ';;; Version: 0.1' >> counshell.el; \
+    echo ';;; counshell.el ends here' >> counshell.el; \
+    cask install; \
+    rm -f counshell.el
 # Run tests with cask ert-runner by default
 CMD set -x -e; \
-    cask install; \
     cask exec ert-runner; \
     true
 
