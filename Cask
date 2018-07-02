@@ -9,4 +9,5 @@
 
 (development
  (depends-on "undercover")
+ (depends-on "el-mock")
  (depends-on "ert-runner"))

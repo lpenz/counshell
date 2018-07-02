@@ -10,6 +10,8 @@
 (require 'undercover)
 (undercover "*.el" (:report-type :codecov))
 
+(require 'el-mock)
+
 (add-to-list 'load-path (f-parent (f-dirname load-file-name)))
 
 (require 'counshell)
@@ -18,3 +20,14 @@
   (should (equal (trim-left "string") "string"))
   (should (equal (trim-left "string ") "string "))
   (should (equal (trim-left " string") "string")))
+
+(ert-deftest counshell-filepath-noproject ()
+  (with-mock
+   (stub projectile-project-p => nil)
+   (should (equal (counshell-filepath "filepath") "filepath"))))
+
+(ert-deftest counshell-filepath-inproject ()
+  (with-mock
+   (stub projectile-project-p => t)
+   (stub projectile-expand-root => "fileinproject")
+   (should (equal (counshell-filepath "filepath") "fileinproject"))))
