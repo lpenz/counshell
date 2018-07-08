@@ -38,22 +38,31 @@
 
 ;; Collection functions
 
-(defun counshell-function (prefix str)
+(defun counshell-create-script (scriptfile dir cmd)
+  "Write the commands to execute in the provided scriptfile"
+  (write-region (format "cd %s\n" dir) nil scriptfile nil 0)
+  (write-region (format "%s\n" cmd) nil scriptfile t 0)
+  (write-region "echo EOF\n" nil scriptfile t 0)
+  scriptfile)
+
+(defun counshell-function (scriptfile prefix str)
   "Run str using the shell if its size is > 2"
   (if (< (length str) 2)
       (counsel-more-chars 2)
-    (counsel--async-command
-       (format "bash -c '%s%s; echo EOF' </dev/null | cat" prefix str))
+    (progn
+      (counshell-create-script scriptfile prefix str)
+      (counsel--async-command
+       (format "bash %s </dev/null | cat" scriptfile)))
     '("" "working...")))
 
-(defun counshell-projectile-function (prefix str)
+(defun counshell-projectile-function (scriptfile prefix str)
   "Run str using the shell if its size is > 2, projectile version"
   (let ((cdprefix (if (projectile-project-p) (format "cd %s; %s" (projectile-project-root) prefix) prefix)))
-       (counshell-function cdprefix str)))
+    (counshell-function scriptfile cdprefix str)))
 
 ;; Action functions - return nil if no action taken
 
-(defun counshell-action-file (filename)
+(defun counshell-action-file (scriptfile filename)
   "Open filename if it is an existing file"
   (let ((filepath (counshell-filepath filename)))
     (when (file-exists-p filepath)
@@ -77,22 +86,24 @@
 
 (defun counshell-sh-read (cmd initial func)
   "Invoke a subprocess through the shell"
-  (ivy-read (format "$ %s" cmd)
-            (lambda (str) (funcall func cmd str))
-            :initial-input initial
-            :dynamic-collection t
-            :history 'counshell-history
-            :action (lambda (str)
-                      (when str
-                        (cond
-                         ((counshell-action-file str) ())
-                         ((counshell-action-file (trim-left str)) ())
-                         ((counshell-action-file-linenum (replace-regexp-in-string ":.*$" "" str)
-                                                         (string-to-number (replace-regexp-in-string "^[^:]+:\\([0-9]+\\):.*" "\\1" str))) ())
-                         ((counshell-action-file (replace-regexp-in-string ":.*$" "" str)) ())
-                         (t (message (format "File not found or unable to parse [%s]" str))))))
-            :unwind #'counsel-delete-process
-	    :caller 'counshell))
+  (let ((scriptfile (make-temp-file "counshell-command.sh.")))
+    (ivy-read (format "$ %s" cmd)
+              (lambda (str) (funcall func scriptfile cmd str))
+              :initial-input initial
+              :dynamic-collection t
+              :history 'counshell-history
+              :action (lambda (str)
+                        (when str
+                          (cond
+                           ((counshell-action-file str) ())
+                           ((counshell-action-file (trim-left str)) ())
+                           ((counshell-action-file-linenum (replace-regexp-in-string ":.*$" "" str)
+                                                           (string-to-number (replace-regexp-in-string "^[^:]+:\\([0-9]+\\):.*" "\\1" str))) ())
+                           ((counshell-action-file (replace-regexp-in-string ":.*$" "" str)) ())
+                           (t (message (format "File not found or unable to parse [%s]" str))))))
+              :unwind (lambda () (progn (delete-file scriptfile)
+                                        (counsel-delete-process)))
+              :caller 'counshell)))
 
 ;; API
 
