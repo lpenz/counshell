@@ -38,27 +38,23 @@
 
 ;; Collection functions
 
-(defun counshell-create-script (scriptfile dir cmd)
+(defun counshell-create-script (scriptfile dir cmdline)
   "Write the commands to execute in the provided scriptfile"
-  (write-region (format "cd %s\n" dir) nil scriptfile nil 0)
-  (write-region (format "%s\n" cmd) nil scriptfile t 0)
+  (when dir (write-region (format "cd %s\n" dir) nil scriptfile nil 0))
+  (write-region (format "%s\n" cmdline) nil scriptfile t 0)
   (write-region "echo EOF\n" nil scriptfile t 0)
   scriptfile)
 
-(defun counshell-function (scriptfile prefix str)
-  "Run str using the shell if its size is > 2"
-  (if (< (length str) 2)
-      (counsel-more-chars 2)
-    (progn
-      (counshell-create-script scriptfile prefix str)
-      (counsel--async-command
-       (format "bash %s </dev/null | cat" scriptfile)))
-    '("" "working...")))
-
-(defun counshell-projectile-function (scriptfile prefix str)
-  "Run str using the shell if its size is > 2, projectile version"
-  (let ((cdprefix (if (projectile-project-p) (format "cd %s; %s" (projectile-project-root) prefix) prefix)))
-    (counshell-function scriptfile cdprefix str)))
+(defun counshell-function (projectile scriptfile prefix str)
+  "Run prefix+str using the shell if str size is > 2"
+  (let ((dir (if (and projectile (projectile-project-p)) (projectile-project-root) nil)))
+    (if (< (length str) 2)
+        (counsel-more-chars 2)
+      (progn
+        (counshell-create-script scriptfile dir (format "%s %s" prefix str))
+        (counsel--async-command
+         (format "bash %s </dev/null | cat" scriptfile)))
+      '("" "working..."))))
 
 ;; Action functions - return nil if no action taken
 
@@ -84,11 +80,11 @@
 
 ;; Main function
 
-(defun counshell-sh-read (cmd initial func)
+(defun counshell-sh-read (projectile prefix initial)
   "Invoke a subprocess through the shell"
   (let ((scriptfile (make-temp-file "counshell-command.sh.")))
-    (ivy-read (format "$ %s" cmd)
-              (lambda (str) (funcall func scriptfile cmd str))
+    (ivy-read (format "$ %s" prefix)
+              (lambda (str) (counshell-function projectile scriptfile prefix str))
               :initial-input initial
               :dynamic-collection t
               :history 'counshell-history
@@ -111,24 +107,24 @@
 (defun counshell-projectile-sh ()
   "Invoke a subprocess through the shell"
   (interactive)
-  (counshell-sh-read "" "" 'counshell-projectile-function))
+  (counshell-sh-read t "" ""))
 
 ;;;###autoload
 (defun counshell-sh ()
   "Invoke a subprocess through the shell"
   (interactive)
-  (counshell-sh-read "" "" 'counshell-function))
+  (counshell-sh-read nil "" ""))
 
 ;;;###autoload
 (defun counshell-projectile-gnuglobal ()
   "Invoke GNU global in a subshell"
   (interactive)
-  (counshell-sh-read "global --result=grep " (ivy-thing-at-point) 'counshell-projectile-function))
+  (counshell-sh-read t "global --result=grep " (ivy-thing-at-point)))
 
 ;;;###autoload
 (defun counshell-projectile-rg ()
   "Invoke rg in a subshell"
   (interactive)
-  (counshell-sh-read "rg -n " "" 'counshell-projectile-function))
+  (counshell-sh-read t "rg -n " ""))
 
 ;;; counshell.el ends here
