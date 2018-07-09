@@ -31,3 +31,8 @@
    (stub projectile-project-p => t)
    (stub projectile-expand-root => "fileinproject")
    (should (equal (counshell-filepath "filepath") "fileinproject"))))
+
+(ert-deftest counshell-create-script ()
+  (let ((scriptfile (make-temp-file "counshell-test.sh.")))
+    (should (equal t (file-readable-p (counshell-create-script scriptfile "/tmp" "ls /"))))
+    (delete-file scriptfile)))
