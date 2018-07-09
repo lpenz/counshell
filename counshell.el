@@ -62,7 +62,7 @@
 
 ;; Action functions - return nil if no action taken
 
-(defun counshell-action-file (scriptfile filename)
+(defun counshell-action-file (filename)
   "Open filename if it is an existing file"
   (let ((filepath (counshell-filepath filename)))
     (when (file-exists-p filepath)
