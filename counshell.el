@@ -32,9 +32,16 @@
 
 (provide 'counshell)
 
+
+;; Misc functions
+
 (defun counshell-filepath (filename)
   "Figure out the path of the file by checking for projectile"
   (if (projectile-project-p) (projectile-expand-root filename) filename))
+
+(defun trim-left (str)
+  (replace-regexp-in-string "^[ \t\n\r]*" "" str))
+
 
 ;; Collection functions
 
@@ -56,6 +63,7 @@
          (format "bash %s </dev/null | cat" scriptfile)))
       '("" "working..."))))
 
+
 ;; Action functions - return nil if no action taken
 
 (defun counshell-action-file (filename)
@@ -75,8 +83,6 @@
           (goto-char (point-min))
           (forward-line (- linenum 1)))))))
 
-(defun trim-left (str)
-  (replace-regexp-in-string "^[ \t\n\r]*" "" str))
 
 ;; Main function
 

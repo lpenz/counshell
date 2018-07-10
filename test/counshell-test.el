@@ -36,3 +36,18 @@
   (let ((scriptfile (make-temp-file "counshell-test.sh.")))
     (should (equal t (file-readable-p (counshell-create-script scriptfile "/tmp" "ls /"))))
     (delete-file scriptfile)))
+
+
+;; Test top-level functions
+
+(ert-deftest counshell-top-projectile ()
+  (with-mock
+   (mock (counshell-sh-read t * *))
+   (counshell-projectile-sh)
+   (counshell-projectile-gnuglobal)
+   (counshell-projectile-rg)))
+
+(ert-deftest counshell-top-noprojectile ()
+  (with-mock
+   (mock (counshell-sh-read nil * *))
+   (counshell-sh)))
