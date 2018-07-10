@@ -43,6 +43,48 @@
   (replace-regexp-in-string "^[ \t\n\r]*" "" str))
 
 
+;; Format function
+
+(defun counshell-format-str (str)
+  "Format str if format is known"
+  (cond
+   ((and (string-match "\\`\\([^:]+\\):\\([0-9]+\\):" str)
+         (file-exists-p (counshell-filepath
+                         (substring str (match-beginning 1) (match-end 1)))))
+    (progn
+      (ivy-add-face-text-property (match-beginning 1) (match-end 1)
+                                  'compilation-info
+                                  str)
+      (ivy-add-face-text-property (match-beginning 2) (match-end 2)
+                                  'compilation-line-number
+                                  str)))
+   ((and (string-match "\\`\\([^:]+\\):" str)
+         (file-exists-p (counshell-filepath
+                         (substring str (match-beginning 1) (match-end 1)))))
+    (progn
+      (ivy-add-face-text-property (match-beginning 1) (match-end 1)
+                                  'compilation-info
+                                  str)))
+   ((and (string-match "\\`\\(.+\\)$" str)
+         (file-exists-p (counshell-filepath
+                         (substring str (match-beginning 1) (match-end 1)))))
+    (progn
+      (ivy-add-face-text-property (match-beginning 1) (match-end 1)
+                                  'compilation-info
+                                  str)))
+   )
+  str)
+
+(defun counshell-format-function (cands)
+  "Format candidates if format is known by using counshell-format-str"
+  (ivy--format-function-generic
+   (lambda (str)
+     (ivy--add-face (counshell-format-str str) 'ivy-current-match))
+   #'counshell-format-str
+   cands
+   "\n"))
+
+
 ;; Collection functions
 
 (defun counshell-create-script (scriptfile dir cmdline)
@@ -88,7 +130,8 @@
 
 (defun counshell-sh-read (projectile prefix initial)
   "Invoke a subprocess through the shell"
-  (let ((scriptfile (make-temp-file "counshell-command.sh.")))
+  (let ((scriptfile (make-temp-file "counshell-command.sh."))
+        (ivy-format-function #'counshell-format-function))
     (ivy-read (format "$ %s" prefix)
               (lambda (str) (counshell-function projectile scriptfile prefix str))
               :initial-input initial
