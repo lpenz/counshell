@@ -29,7 +29,6 @@
 (require 'ivy)
 (require 'counsel)
 (require 'projectile)
-(require 'subr-x)
 
 (provide 'counshell)
 
@@ -37,8 +36,10 @@
 ;; Misc functions
 
 (defun counshell--filepath (filename)
-  "Figure out the path of the file by checking for projectile"
-  (if (projectile-project-p) (projectile-expand-root filename) filename))
+  "Figure out the path of the file by checking for projectile.
+Returns nil if file doesn't exist."
+  (let ((f (if (projectile-project-p) (projectile-expand-root filename) filename)))
+    (if (file-exists-p f) f nil)))
 
 
 ;; Regex handling
@@ -49,23 +50,32 @@
         '("\\`\\(.+\\)$" . 1))
   "Default list of regexes that are matched against the shell output")
 
-(defun counshell--matched-str (str match)
-  (substring str (match-beginning match) (match-end match)))
-
 (defun counshell--match-regexes (str &optional regexes)
-  (let ((res (or regexes counshell--default-regexes)))
-    (cdr (car (cl-member-if (lambda (regex-num)
-                              (and (string-match (car regex-num) str)
-                                   (file-exists-p
-                                    (counshell--filepath
-                                     (counshell--matched-str str 1)))))
-                            res)))))
+  "Try each of the regexes in turn.
+If the regex has 2 elements, return a list with file name and line number;
+if the regex has 1 element, return a list with the file name only;
+if there is no match, return nil."
+  (let* ((res (or regexes counshell--default-regexes))
+         (re-num (cl-member-if (lambda (regex-num)
+                                 (and (string-match (car regex-num) str)
+                                      (counshell--filepath (match-string 1 str))))
+                               res))
+         (num (cdr (car re-num))))
+    (when num
+      (string-match (car (car re-num)) str) ;; match again because of projectile
+      (cond
+       ((= num 2) (list
+                   (match-string 1 str)
+                   (string-to-number (match-string 2 str))))
+       ((= num 1) (list
+                   (match-string 1 str)))))))
+
 
 ;; Format functions
 
 (defun counshell--format-str (str)
   "Format str if format is known"
-  (let ((matches (or (counshell--match-regexes str) 0)))
+  (let ((matches (or (length (counshell--match-regexes str)) 0)))
     (when (> matches 0)
       (ivy-add-face-text-property
        (match-beginning 1) (match-end 1)
@@ -111,22 +121,19 @@
 
 ;; Action functions - return nil if no action taken
 
-(defun counshell--action-file (filename)
-  "Open filename if it is an existing file"
-  (let ((filepath (counshell--filepath filename)))
-    (when (file-exists-p filepath)
-      (with-ivy-window
-        (find-file filepath)))))
-
-(defun counshell--action-file-linenum (filename linenum)
-  "Open filename and go to linenum if filename is an existing file"
-  (let ((filepath (counshell--filepath filename)))
-    (when (file-exists-p filepath)
-      (with-ivy-window
-        (progn
-          (find-file filepath)
-          (goto-char (point-min))
-          (forward-line (- linenum 1)))))))
+(defun counshell--action (str)
+  "Open file in line number if str format is recognized"
+  (when str
+    (let* ((matches (counshell--match-regexes str))
+           (num (length matches)))
+      (if matches
+          (with-ivy-window
+            (find-file (counshell--filepath (car matches)))
+            (when (> num 1)
+              (let ((linenum (nth 1 matches)))
+                (goto-char (point-min))
+                (forward-line (- linenum 1)))))
+        (message (format "File not found or unable to parse [%s]" str))))))
 
 
 ;; Main function
@@ -140,15 +147,7 @@
               :initial-input initial
               :dynamic-collection t
               :history 'counshell-history
-              :action (lambda (str)
-                        (when str
-                          (cond
-                           ((counshell--action-file str) ())
-                           ((counshell--action-file (string-trim-left str)) ())
-                           ((counshell--action-file-linenum (replace-regexp-in-string ":.*$" "" str)
-                                                           (string-to-number (replace-regexp-in-string "^[^:]+:\\([0-9]+\\):.*" "\\1" str))) ())
-                           ((counshell--action-file (replace-regexp-in-string ":.*$" "" str)) ())
-                           (t (message (format "File not found or unable to parse [%s]" str))))))
+              :action #'counshell--action
               :unwind (lambda () (progn (delete-file scriptfile)
                                         (counsel-delete-process)))
               :caller 'counshell)))

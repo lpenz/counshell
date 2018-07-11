@@ -20,13 +20,18 @@
 (ert-deftest counshell-filepath-noproject ()
   (with-mock
    (stub projectile-project-p => nil)
-   (should (equal (counshell--filepath "filepath") "filepath"))))
+   (should (equal (counshell--filepath "counshell.el") "counshell.el"))))
 
 (ert-deftest counshell-filepath-inproject ()
   (with-mock
    (stub projectile-project-p => t)
-   (stub projectile-expand-root => "fileinproject")
-   (should (equal (counshell--filepath "filepath") "fileinproject"))))
+   (stub projectile-expand-root => "counshell.el")
+   (should (equal (counshell--filepath "counshell.el") "counshell.el"))))
+
+(ert-deftest counshell-filepath-nofile ()
+  (with-mock
+   (stub projectile-project-p => nil)
+   (should (equal (counshell--filepath "nofile") nil))))
 
 (ert-deftest counshell-create-script ()
   (let ((scriptfile (make-temp-file "counshell-test.sh.")))
@@ -51,7 +56,15 @@
 ;; Test regex functions
 
 (ert-deftest counshell-regexes ()
-   (should (equal (counshell--match-regexes "counshell.el:5: ok") 2))
-   (should (equal (counshell--match-regexes "counshell.el: ok") 1))
-   (should (equal (counshell--match-regexes "counshell.el") 1))
-   (should (equal (counshell--match-regexes "zxcv:5: no file") nil)))
+  (should (equal
+           (counshell--match-regexes "counshell.el:5: ok")
+           (list "counshell.el" 5)))
+  (should (equal
+           (counshell--match-regexes "counshell.el: ok")
+           (list "counshell.el")))
+  (should (equal
+           (counshell--match-regexes "counshell.el")
+           (list "counshell.el")))
+  (should (equal
+           (counshell--match-regexes "zxcv:5: no file")
+           nil)))
