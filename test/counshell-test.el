@@ -16,25 +16,21 @@
 
 (require 'counshell)
 
-(ert-deftest counshell-trim-left ()
-  (should (equal (trim-left "string") "string"))
-  (should (equal (trim-left "string ") "string "))
-  (should (equal (trim-left " string") "string")))
 
 (ert-deftest counshell-filepath-noproject ()
   (with-mock
    (stub projectile-project-p => nil)
-   (should (equal (counshell-filepath "filepath") "filepath"))))
+   (should (equal (counshell--filepath "filepath") "filepath"))))
 
 (ert-deftest counshell-filepath-inproject ()
   (with-mock
    (stub projectile-project-p => t)
    (stub projectile-expand-root => "fileinproject")
-   (should (equal (counshell-filepath "filepath") "fileinproject"))))
+   (should (equal (counshell--filepath "filepath") "fileinproject"))))
 
 (ert-deftest counshell-create-script ()
   (let ((scriptfile (make-temp-file "counshell-test.sh.")))
-    (should (equal t (file-readable-p (counshell-create-script scriptfile "/tmp" "ls /"))))
+    (should (equal t (file-readable-p (counshell--create-script scriptfile "/tmp" "ls /"))))
     (delete-file scriptfile)))
 
 
@@ -59,4 +55,3 @@
    (should (equal (counshell--match-regexes "counshell.el: ok") 1))
    (should (equal (counshell--match-regexes "counshell.el") 1))
    (should (equal (counshell--match-regexes "zxcv:5: no file") nil)))
-

@@ -29,18 +29,16 @@
 (require 'ivy)
 (require 'counsel)
 (require 'projectile)
+(require 'subr-x)
 
 (provide 'counshell)
 
 
 ;; Misc functions
 
-(defun counshell-filepath (filename)
+(defun counshell--filepath (filename)
   "Figure out the path of the file by checking for projectile"
   (if (projectile-project-p) (projectile-expand-root filename) filename))
-
-(defun trim-left (str)
-  (replace-regexp-in-string "^[ \t\n\r]*" "" str))
 
 
 ;; Regex handling
@@ -59,51 +57,53 @@
     (cdr (car (cl-member-if (lambda (regex-num)
                               (and (string-match (car regex-num) str)
                                    (file-exists-p
-                                    (counshell-filepath
+                                    (counshell--filepath
                                      (counshell--matched-str str 1)))))
                             res)))))
 
 ;; Format functions
 
-(defun counshell-format-str (str)
+(defun counshell--format-str (str)
   "Format str if format is known"
   (let ((matches (or (counshell--match-regexes str) 0)))
     (when (> matches 0)
-      (ivy-add-face-text-property (match-beginning 1) (match-end 1)
-                                  'compilation-info
-                                  str))
+      (ivy-add-face-text-property
+       (match-beginning 1) (match-end 1)
+       'compilation-info
+       str))
     (when (> matches 1)
-      (ivy-add-face-text-property (match-beginning 2) (match-end 2)
-                                  'compilation-line-number
-                                  str)))
+      (ivy-add-face-text-property
+       (match-beginning 2) (match-end 2)
+       'compilation-line-number
+       str)))
   str)
 
-(defun counshell-format-function (cands)
-  "Format candidates if format is known by using counshell-format-str"
+(defun counshell--format-function (cands)
+  "Format candidates if format is known by using counshell--format-str"
   (ivy--format-function-generic
    (lambda (str)
-     (ivy--add-face (counshell-format-str str) 'ivy-current-match))
-   #'counshell-format-str
+     (ivy--add-face (counshell--format-str str) 'ivy-current-match))
+   #'counshell--format-str
    cands
    "\n"))
 
 
 ;; Collection functions
 
-(defun counshell-create-script (scriptfile dir cmdline)
+(defun counshell--create-script (scriptfile dir cmdline)
   "Write the commands to execute in the provided scriptfile"
   (when dir (write-region (format "cd %s\n" dir) nil scriptfile nil 0))
   (write-region (format "%s\n" cmdline) nil scriptfile t 0)
   (write-region "echo EOF\n" nil scriptfile t 0)
   scriptfile)
 
-(defun counshell-function (projectile scriptfile prefix str)
+(defun counshell--function (projectile scriptfile prefix str)
   "Run prefix+str using the shell if str size is > 2"
   (let ((dir (if (and projectile (projectile-project-p)) (projectile-project-root) nil)))
     (if (< (length str) 2)
         (counsel-more-chars 2)
       (progn
-        (counshell-create-script scriptfile dir (format "%s %s" prefix str))
+        (counshell--create-script scriptfile dir (format "%s %s" prefix str))
         (counsel--async-command
          (format "bash %s </dev/null | cat" scriptfile)))
       '("" "working..."))))
@@ -111,16 +111,16 @@
 
 ;; Action functions - return nil if no action taken
 
-(defun counshell-action-file (filename)
+(defun counshell--action-file (filename)
   "Open filename if it is an existing file"
-  (let ((filepath (counshell-filepath filename)))
+  (let ((filepath (counshell--filepath filename)))
     (when (file-exists-p filepath)
       (with-ivy-window
         (find-file filepath)))))
 
-(defun counshell-action-file-linenum (filename linenum)
+(defun counshell--action-file-linenum (filename linenum)
   "Open filename and go to linenum if filename is an existing file"
-  (let ((filepath (counshell-filepath filename)))
+  (let ((filepath (counshell--filepath filename)))
     (when (file-exists-p filepath)
       (with-ivy-window
         (progn
@@ -134,20 +134,20 @@
 (defun counshell-sh-read (projectile prefix initial)
   "Invoke a subprocess through the shell"
   (let ((scriptfile (make-temp-file "counshell-command.sh."))
-        (ivy-format-function #'counshell-format-function))
+        (ivy-format-function #'counshell--format-function))
     (ivy-read (format "$ %s" prefix)
-              (lambda (str) (counshell-function projectile scriptfile prefix str))
+              (lambda (str) (counshell--function projectile scriptfile prefix str))
               :initial-input initial
               :dynamic-collection t
               :history 'counshell-history
               :action (lambda (str)
                         (when str
                           (cond
-                           ((counshell-action-file str) ())
-                           ((counshell-action-file (trim-left str)) ())
-                           ((counshell-action-file-linenum (replace-regexp-in-string ":.*$" "" str)
+                           ((counshell--action-file str) ())
+                           ((counshell--action-file (string-trim-left str)) ())
+                           ((counshell--action-file-linenum (replace-regexp-in-string ":.*$" "" str)
                                                            (string-to-number (replace-regexp-in-string "^[^:]+:\\([0-9]+\\):.*" "\\1" str))) ())
-                           ((counshell-action-file (replace-regexp-in-string ":.*$" "" str)) ())
+                           ((counshell--action-file (replace-regexp-in-string ":.*$" "" str)) ())
                            (t (message (format "File not found or unable to parse [%s]" str))))))
               :unwind (lambda () (progn (delete-file scriptfile)
                                         (counsel-delete-process)))
