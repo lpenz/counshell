@@ -51,3 +51,12 @@
   (with-mock
    (mock (counshell-sh-read nil * *))
    (counshell-sh)))
+
+;; Test regex functions
+
+(ert-deftest counshell-regexes ()
+   (should (equal (counshell--match-regexes "counshell.el:5: ok") 2))
+   (should (equal (counshell--match-regexes "counshell.el: ok") 1))
+   (should (equal (counshell--match-regexes "counshell.el") 1))
+   (should (equal (counshell--match-regexes "zxcv:5: no file") nil)))
+

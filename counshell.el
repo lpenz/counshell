@@ -43,36 +43,39 @@
   (replace-regexp-in-string "^[ \t\n\r]*" "" str))
 
 
-;; Format function
+;; Regex handling
+
+(defvar counshell--default-regexes
+  (list '("\\`\\([^:]+\\):\\([0-9]+\\):" . 2)
+        '("\\`\\([^:]+\\):" . 1)
+        '("\\`\\(.+\\)$" . 1))
+  "Default list of regexes that are matched against the shell output")
+
+(defun counshell--matched-str (str match)
+  (substring str (match-beginning match) (match-end match)))
+
+(defun counshell--match-regexes (str &optional regexes)
+  (let ((res (or regexes counshell--default-regexes)))
+    (cdr (car (cl-member-if (lambda (regex-num)
+                              (and (string-match (car regex-num) str)
+                                   (file-exists-p
+                                    (counshell-filepath
+                                     (counshell--matched-str str 1)))))
+                            res)))))
+
+;; Format functions
 
 (defun counshell-format-str (str)
   "Format str if format is known"
-  (cond
-   ((and (string-match "\\`\\([^:]+\\):\\([0-9]+\\):" str)
-         (file-exists-p (counshell-filepath
-                         (substring str (match-beginning 1) (match-end 1)))))
-    (progn
+  (let ((matches (or (counshell--match-regexes str) 0)))
+    (when (> matches 0)
       (ivy-add-face-text-property (match-beginning 1) (match-end 1)
                                   'compilation-info
-                                  str)
+                                  str))
+    (when (> matches 1)
       (ivy-add-face-text-property (match-beginning 2) (match-end 2)
                                   'compilation-line-number
                                   str)))
-   ((and (string-match "\\`\\([^:]+\\):" str)
-         (file-exists-p (counshell-filepath
-                         (substring str (match-beginning 1) (match-end 1)))))
-    (progn
-      (ivy-add-face-text-property (match-beginning 1) (match-end 1)
-                                  'compilation-info
-                                  str)))
-   ((and (string-match "\\`\\(.+\\)$" str)
-         (file-exists-p (counshell-filepath
-                         (substring str (match-beginning 1) (match-end 1)))))
-    (progn
-      (ivy-add-face-text-property (match-beginning 1) (match-end 1)
-                                  'compilation-info
-                                  str)))
-   )
   str)
 
 (defun counshell-format-function (cands)
