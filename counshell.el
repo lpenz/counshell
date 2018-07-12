@@ -38,8 +38,12 @@
 (defun counshell--filepath (filename)
   "Figure out the path of the file by checking for projectile.
 Returns nil if file doesn't exist."
-  (let ((f (if (projectile-project-p) (projectile-expand-root filename) filename)))
-    (if (file-exists-p f) f nil)))
+  (let ((f (if (projectile-project-p)
+               (projectile-expand-root filename)
+             filename)))
+    (if (file-exists-p f)
+        f
+      nil)))
 
 
 ;; Regex handling
@@ -90,11 +94,13 @@ if there is no match, return nil."
          str)))
     str))
 
+(defun counshell--format-str-current (str)
+  (ivy--add-face (counshell--format-str str) 'ivy-current-match))
+
 (defun counshell--format (cands)
   "Format candidates if format is known by using counshell--format-str"
   (ivy--format-function-generic
-   (lambda (str)
-     (ivy--add-face (counshell--format-str str) 'ivy-current-match))
+   #'counshell--format-str-current
    #'counshell--format-str
    cands
    "\n"))
@@ -111,15 +117,19 @@ if there is no match, return nil."
 
 (defun counshell--function (projectile scriptfile prefix str)
   "Run prefix+str using the shell if str size is > 2"
-  (let ((dir (if (and projectile (projectile-project-p)) (projectile-project-root) nil)))
+  (let ((dir (if (and projectile (projectile-project-p))
+                 (projectile-project-root)
+               nil)))
     (if (< (length str) 2)
         (counsel-more-chars 2)
       (progn
         (counshell--create-script scriptfile dir (format "%s %s" prefix str))
-        (counsel--async-command
-         (format "bash %s </dev/null | cat" scriptfile)))
-      '("" "working..."))))
+        (counsel--async-command (format "bash %s </dev/null | cat" scriptfile))
+        '("" "working...")))))
 
+(defun counshell--function-wrapper (projectile scriptfile prefix)
+  `(lambda (str)
+     (counshell--function ,projectile ,scriptfile ,prefix str)))
 
 ;; Action functions - return nil if no action taken
 
@@ -137,21 +147,23 @@ if there is no match, return nil."
                 (forward-line (- linenum 1)))))
         (message (format "File not found or unable to parse [%s]" str))))))
 
-
 ;; Main function
+
+(defun counshell--unwind (scriptfile)
+  `(lambda () (progn (delete-file ,scriptfile)
+                     (counsel-delete-process))))
 
 (defun counshell-sh-read (projectile prefix initial)
   "Invoke a subprocess through the shell"
   (let ((scriptfile (make-temp-file "counshell-command.sh."))
         (ivy-format-function #'counshell--format))
     (ivy-read (format "$ %s" prefix)
-              (lambda (str) (counshell--function projectile scriptfile prefix str))
+              (counshell--function-wrapper projectile scriptfile prefix)
               :initial-input initial
               :dynamic-collection t
               :history 'counshell-history
               :action #'counshell--action
-              :unwind (lambda () (progn (delete-file scriptfile)
-                                        (counsel-delete-process)))
+              :unwind (counshell--unwind scriptfile)
               :caller 'counshell)))
 
 ;; API
