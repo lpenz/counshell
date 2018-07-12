@@ -75,20 +75,22 @@ if there is no match, return nil."
 
 (defun counshell--format-str (str)
   "Format str if format is known"
-  (let ((matches (or (length (counshell--match-regexes str)) 0)))
-    (when (> matches 0)
-      (ivy-add-face-text-property
-       (match-beginning 1) (match-end 1)
-       'compilation-info
-       str))
-    (when (> matches 1)
-      (ivy-add-face-text-property
-       (match-beginning 2) (match-end 2)
-       'compilation-line-number
-       str)))
-  str)
+  (if (string= str "EOF")
+      (ivy--add-face str 'file-name-shadow)
+    (let ((matches (or (length (counshell--match-regexes str)) 0)))
+      (when (> matches 0)
+        (ivy-add-face-text-property
+         (match-beginning 1) (match-end 1)
+         'compilation-info
+         str))
+      (when (> matches 1)
+        (ivy-add-face-text-property
+         (match-beginning 2) (match-end 2)
+         'compilation-line-number
+         str)))
+    str))
 
-(defun counshell--format-function (cands)
+(defun counshell--format (cands)
   "Format candidates if format is known by using counshell--format-str"
   (ivy--format-function-generic
    (lambda (str)
@@ -141,7 +143,7 @@ if there is no match, return nil."
 (defun counshell-sh-read (projectile prefix initial)
   "Invoke a subprocess through the shell"
   (let ((scriptfile (make-temp-file "counshell-command.sh."))
-        (ivy-format-function #'counshell--format-function))
+        (ivy-format-function #'counshell--format))
     (ivy-read (format "$ %s" prefix)
               (lambda (str) (counshell--function projectile scriptfile prefix str))
               :initial-input initial
