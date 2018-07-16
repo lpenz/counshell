@@ -21,12 +21,16 @@ use. For example:
 ```elisp
 (global-set-key (kbd "<C-C> e b") 'counshell-sh)
 (global-set-key (kbd "<C-C> e e") 'counshell-projectile-sh)
+(global-set-key (kbd "<C-C> e f") 'counshell-projectile-find-grep)
 (global-set-key (kbd "<C-C> e s") 'counshell-projectile-rg)
-(global-set-key (kbd "<C-C> e g") 'counshell-projectile-gnuglobal)
+(global-set-key (kbd "<C-C> e g") 'counshell-projectile-grep)
+(global-set-key (kbd "<C-C> e b") 'counshell-projectile-gnuglobal)
+(global-set-key (kbd "<C-C> e i") 'counshell-projectile-idutils-gid)
 ```
 
-The other functions will add a template command-line and allow you to
-complete it interactively.
+`counshell-sh` is the function that lets you type the whole shell
+command. The other functions will add a template command-line and
+allow you to complete it interactively.
 
 
 ## Usage
