@@ -10,7 +10,7 @@ RUN set -x -e; \
         curl \
         git \
         python \
-        emacs \
+        emacs25 \
         gosu sudo
 
 # setup sudo and locale
@@ -35,6 +35,7 @@ RUN set -e -x; \
     rm -f counshell.el
 # Run tests with cask ert-runner by default
 CMD set -x -e; \
+    cp -R /tmp/.cask .; \
     cask exec ert-runner; \
     true
 
@@ -46,6 +47,7 @@ RUN set -x -e; \
     echo 'set -x -e'; \
     echo 'useradd -M -u "$MY_UID" -o user'; \
     echo 'chown user:user /home/user'; \
+    echo 'chown -R user:user /tmp/.cask'; \
     echo 'cd /home/user/work'; \
     echo 'exec gosu user "${@:-/bin/bash}"'; \
     ) > /usr/local/bin/entrypoint.sh; \
