@@ -110,7 +110,8 @@ if there is no match, return nil."
 
 (defun counshell--create-script (scriptfile dir cmdline)
   "Write the commands to execute in the provided scriptfile"
-  (when dir (write-region (format "cd %s\n" dir) nil scriptfile nil 0))
+  (write-region "" nil scriptfile nil 0)
+  (when dir (write-region (format "cd %s\n" dir) nil scriptfile t 0))
   (write-region (format "%s\n" cmdline) nil scriptfile t 0)
   (write-region "echo EOF\n" nil scriptfile t 0)
   scriptfile)

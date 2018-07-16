@@ -35,9 +35,21 @@
    (stub projectile-project-p => nil)
    (should (equal (counshell--filepath "nofile") nil))))
 
-(ert-deftest counshell--create-script ()
+(ert-deftest counshell--create-script-dir ()
   (let ((scriptfile (make-temp-file "counshell-test.sh.")))
     (should (equal t (file-readable-p (counshell--create-script scriptfile "/tmp" "ls /"))))
+    (let ((size (nth 7 (file-attributes scriptfile))))
+      (should (equal t (file-readable-p (counshell--create-script scriptfile "/tmp" "ls /"))))
+      (should (equal size (nth 7 (file-attributes scriptfile)))))
+    (delete-file scriptfile)))
+
+(ert-deftest counshell--create-script-nodir ()
+  "Also check that the script is not appended to when created multiple times"
+  (let ((scriptfile (make-temp-file "counshell-test.sh.")))
+    (should (equal t (file-readable-p (counshell--create-script scriptfile nil "ls /"))))
+    (let ((size (nth 7 (file-attributes scriptfile))))
+      (should (equal t (file-readable-p (counshell--create-script scriptfile nil "ls /"))))
+      (should (equal size (nth 7 (file-attributes scriptfile)))))
     (delete-file scriptfile)))
 
 
