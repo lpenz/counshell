@@ -55,17 +55,35 @@
 
 ;; Test top-level functions
 
+(ert-deftest counshell-top ()
+  (with-mock
+   (mock (counshell-sh-read))
+   (counshell-sh)
+   (mock (counshell-sh-read nil *))
+   (counshell-ls)
+   (counshell-grep)
+   (counshell-find)
+   (counshell-find-grep)
+   (counshell-rg)
+   (mock (counshell-sh-read nil * "t"))
+   (stub ivy-thing-at-point => "t")
+   (counshell-gnuglobal)
+   (counshell-idutils-gid)))
+
 (ert-deftest counshell-top-projectile ()
   (with-mock
-   (mock (counshell-sh-read t * *))
+   (mock (counshell-sh-read t))
    (counshell-projectile-sh)
+   (mock (counshell-sh-read t *))
+   (counshell-projectile-ls)
+   (counshell-projectile-grep)
+   (counshell-projectile-find)
+   (counshell-projectile-find-grep)
+   (counshell-projectile-rg)
+   (mock (counshell-sh-read t * "p"))
+   (stub ivy-thing-at-point => "p")
    (counshell-projectile-gnuglobal)
-   (counshell-projectile-rg)))
-
-(ert-deftest counshell-top-noprojectile ()
-  (with-mock
-   (mock (counshell-sh-read nil * *))
-   (counshell-sh)))
+   (counshell-projectile-idutils-gid)))
 
 
 ;; Test regex functions

@@ -157,16 +157,16 @@ if there is no match, return nil."
   `(lambda () (progn (delete-file ,scriptfile)
                      (counsel-delete-process))))
 
-(defun counshell-sh-read (projectile prefix initial)
+(defun counshell-sh-read (&optional projectile prefix initial)
   "Invoke a subprocess through the shell.
 If PROJECTILE, run command in project directory.
 PREFIX is pre-pended to the ‘command-line’; allows pre-defined commands.
 INITIAL is used to pre-populate the ‘command-line’."
   (let ((scriptfile (make-temp-file "counshell-command.sh."))
         (ivy-format-function #'counshell--format))
-    (ivy-read (format "$ %s" prefix)
-              (counshell--function-wrapper projectile scriptfile prefix)
-              :initial-input initial
+    (ivy-read (format "$ %s" (or prefix ""))
+              (counshell--function-wrapper projectile scriptfile (or prefix ""))
+              :initial-input (or initial "")
               :dynamic-collection t
               :history 'counshell-history
               :action #'counshell--action
@@ -176,27 +176,99 @@ INITIAL is used to pre-populate the ‘command-line’."
 ;; API
 
 ;;;###autoload
-(defun counshell-projectile-sh ()
-  "Invoke a subprocess through the shell."
-  (interactive)
-  (counshell-sh-read t "" ""))
-
-;;;###autoload
 (defun counshell-sh ()
   "Invoke a subprocess through the shell."
   (interactive)
-  (counshell-sh-read nil "" ""))
+  (counshell-sh-read))
 
 ;;;###autoload
-(defun counshell-projectile-gnuglobal ()
-  "Invoke GNU global in a subshell."
+(defun counshell-projectile-sh ()
+  "Invoke a subprocess through the shell in the project directory."
   (interactive)
-  (counshell-sh-read t "global --result=grep " (ivy-thing-at-point)))
+  (counshell-sh-read t))
+
+;;;###autoload
+(defun counshell-ls ()
+  "Invoke ls in a subshell."
+  (interactive)
+  (counshell-sh-read nil "ls "))
+
+;;;###autoload
+(defun counshell-projectile-ls ()
+  "Invoke ls in a subshell in the project directory."
+  (interactive)
+  (counshell-sh-read t "ls "))
+
+;;;###autoload
+(defun counshell-grep ()
+  "Invoke grep in a subshell."
+  (interactive)
+  (counshell-sh-read nil "grep -n "))
+
+;;;###autoload
+(defun counshell-projectile-grep ()
+  "Invoke grep in a subshell in the project directory."
+  (interactive)
+  (counshell-sh-read t "grep -n "))
+
+;;;###autoload
+(defun counshell-find ()
+  "Invoke find in a subshell."
+  (interactive)
+  (counshell-sh-read nil "find "))
+
+;;;###autoload
+(defun counshell-projectile-find ()
+  "Invoke find in a subshell in the project directory."
+  (interactive)
+  (counshell-sh-read t "find "))
+
+;;;###autoload
+(defun counshell-find-grep ()
+  "Invoke find for files piped to grep in a subshell."
+  (interactive)
+  (counshell-sh-read nil "find . -type f | grep "))
+
+;;;###autoload
+(defun counshell-projectile-find-grep ()
+  "Invoke find for files piped to grep in a subshell in the project directory."
+  (interactive)
+  (counshell-sh-read t "find . -type f | grep "))
+
+;;;###autoload
+(defun counshell-rg ()
+  "Invoke rg in a subshell."
+  (interactive)
+  (counshell-sh-read nil "rg -n "))
 
 ;;;###autoload
 (defun counshell-projectile-rg ()
   "Invoke rg in a subshell."
   (interactive)
-  (counshell-sh-read t "rg -n " ""))
+  (counshell-sh-read t "rg -n "))
 
-;;; counshell.el ends here
+;;;###autoload
+(defun counshell-gnuglobal ()
+  "Invoke GNU global in a subshell."
+  (interactive)
+  (counshell-sh-read nil "global --result=grep " (ivy-thing-at-point)))
+
+;;;###autoload
+(defun counshell-projectile-gnuglobal ()
+  "Invoke GNU global in a subshell in the project directory."
+  (interactive)
+  (counshell-sh-read t "global --result=grep " (ivy-thing-at-point)))
+
+;;;###autoload
+(defun counshell-idutils-gid ()
+  "Invoke idutils' gid in a subshell."
+  (interactive)
+  (counshell-sh-read nil "gid " (ivy-thing-at-point)))
+
+;;;###autoload
+(defun counshell-projectile-idutils-gid ()
+  "Invoke idutils' gid in a subshell in the project directory."
+  (interactive)
+  (counshell-sh-read t "gid " (ivy-thing-at-point)))
+
+;;; counshell.el ends here 
