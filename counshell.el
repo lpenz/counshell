@@ -19,7 +19,7 @@
 ;; the output as file:line:msg (grep-like).
 ;; - counshell-gnuglobal: interprets ivy input as arguments to GNU global,
 ;; effectively prefixing the input with "global --results=grep ".
-;; - counshell-rg: interprets ivy input as arguments to ripgrep. It allows you
+;; - counshell-rg: interprets ivy input as arguments to ripgrep.  It allows you
 ;; to use ripgrep's arguments to limit the search to a file/directory, a
 ;; specific file type, etc.
 ;; - counshell-projectile-*: counshell-sh-* in the project's directory.
@@ -36,8 +36,8 @@
 ;; Misc functions
 
 (defun counshell--filepath (filename)
-  "Figure out the path of the file by checking for projectile.
-Returns nil if file doesn't exist."
+  "Figure out the path of the FILENAME by checking for projectile.
+Returns nil if FILENAME doesn't exist."
   (let ((f (if (projectile-project-p)
                (projectile-expand-root filename)
              filename)))
@@ -52,10 +52,10 @@ Returns nil if file doesn't exist."
   (list '("\\`\\([^:]+\\):\\([0-9]+\\):" . 2)
         '("\\`\\([^:]+\\):" . 1)
         '("\\`\\(.+\\)$" . 1))
-  "Default list of regexes that are matched against the shell output")
+  "Default list of regexes that are matched against the shell output.")
 
 (defun counshell--match-regexes (str &optional regexes)
-  "Try each of the regexes in turn.
+  "Try to match STR against each of the REGEXES in turn.
 If the regex has 2 elements, return a list with file name and line number;
 if the regex has 1 element, return a list with the file name only;
 if there is no match, return nil."
@@ -78,7 +78,7 @@ if there is no match, return nil."
 ;; Format functions
 
 (defun counshell--format-str (str)
-  "Format str if format is known"
+  "Format STR if format is known."
   (if (string= str "EOF")
       (ivy--add-face str 'file-name-shadow)
     (let ((matches (or (length (counshell--match-regexes str)) 0)))
@@ -95,10 +95,11 @@ if there is no match, return nil."
     str))
 
 (defun counshell--format-str-current (str)
+  "Format STR when it is the current selection."
   (ivy--add-face (counshell--format-str str) 'ivy-current-match))
 
 (defun counshell--format (cands)
-  "Format candidates if format is known by using counshell--format-str"
+  "Format CANDS if format is known by using ‘counshell--format-str’."
   (ivy--format-function-generic
    #'counshell--format-str-current
    #'counshell--format-str
@@ -109,7 +110,7 @@ if there is no match, return nil."
 ;; Collection functions
 
 (defun counshell--create-script (scriptfile dir cmdline)
-  "Write the commands to execute in the provided scriptfile"
+  "Write to SCRIPTFILE the command to change the directory to DIR, followed by CMDLINE."
   (write-region "" nil scriptfile nil 0)
   (when dir (write-region (format "cd %s\n" dir) nil scriptfile t 0))
   (write-region (format "%s\n" cmdline) nil scriptfile t 0)
@@ -117,7 +118,7 @@ if there is no match, return nil."
   scriptfile)
 
 (defun counshell--function (projectile scriptfile prefix str)
-  "Run prefix+str using the shell if str size is > 2"
+  "If PROJECTILE, go to project directory before writting SCRIPTFILE with PREFIX STR and running it using the shell - otherwise, keep dir unchanged.  If str size is <=2, do nothing."
   (let ((dir (if (and projectile (projectile-project-p))
                  (projectile-project-root)
                nil)))
@@ -129,13 +130,14 @@ if there is no match, return nil."
         '("" "working...")))))
 
 (defun counshell--function-wrapper (projectile scriptfile prefix)
+  "Return ‘counshell--function’ as a closure with pre-defined arguments PROJECTILE, SCRIPTFILE and PREFIX."
   `(lambda (str)
      (counshell--function ,projectile ,scriptfile ,prefix str)))
 
 ;; Action functions - return nil if no action taken
 
 (defun counshell--action (str)
-  "Open file in line number if str format is recognized"
+  "Open file in line number if STR format is recognized."
   (when str
     (let* ((matches (counshell--match-regexes str))
            (num (length matches)))
@@ -151,11 +153,15 @@ if there is no match, return nil."
 ;; Main function
 
 (defun counshell--unwind (scriptfile)
+  "Create a closure that removes SCRIPTFILE and kills counshell process."
   `(lambda () (progn (delete-file ,scriptfile)
                      (counsel-delete-process))))
 
 (defun counshell-sh-read (projectile prefix initial)
-  "Invoke a subprocess through the shell"
+  "Invoke a subprocess through the shell.
+If PROJECTILE, run command in project directory.
+PREFIX is pre-pended to the ‘command-line’; allows pre-defined commands.
+INITIAL is used to pre-populate the ‘command-line’."
   (let ((scriptfile (make-temp-file "counshell-command.sh."))
         (ivy-format-function #'counshell--format))
     (ivy-read (format "$ %s" prefix)
@@ -171,25 +177,25 @@ if there is no match, return nil."
 
 ;;;###autoload
 (defun counshell-projectile-sh ()
-  "Invoke a subprocess through the shell"
+  "Invoke a subprocess through the shell."
   (interactive)
   (counshell-sh-read t "" ""))
 
 ;;;###autoload
 (defun counshell-sh ()
-  "Invoke a subprocess through the shell"
+  "Invoke a subprocess through the shell."
   (interactive)
   (counshell-sh-read nil "" ""))
 
 ;;;###autoload
 (defun counshell-projectile-gnuglobal ()
-  "Invoke GNU global in a subshell"
+  "Invoke GNU global in a subshell."
   (interactive)
   (counshell-sh-read t "global --result=grep " (ivy-thing-at-point)))
 
 ;;;###autoload
 (defun counshell-projectile-rg ()
-  "Invoke rg in a subshell"
+  "Invoke rg in a subshell."
   (interactive)
   (counshell-sh-read t "rg -n " ""))
 
