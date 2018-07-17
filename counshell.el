@@ -5,7 +5,7 @@
 ;; Author: Leandro Lisboa Penz <lpenz@lpenz.org>
 ;; Keywords: lisp, bash
 ;; Version: 0.1
-;; Package-Requires: ((emacs "25.1") (swiper "0.10.0") (counsel "0.10.0") (projectile "0.14.0"))
+;; Package-Requires: ((emacs "25.1") (swiper "0.10.0") (counsel "20180714") (projectile "0.14.0"))
 ;; URL: https://github.com/lpenz/counshell
 
 ;; This file is subject to the terms and conditions defined in
@@ -123,7 +123,7 @@ if there is no match, return nil."
                  (projectile-project-root)
                nil)))
     (if (< (length str) 2)
-        (counsel-more-chars 2)
+        (counsel-more-chars)
       (progn
         (counshell--create-script scriptfile dir (format "%s %s" prefix str))
         (counsel--async-command (format "bash %s </dev/null | cat" scriptfile))

@@ -168,7 +168,7 @@
 (ert-deftest counshell--function-wrapper ()
   (with-mock
    (mock (projectile-project-p) => nil)
-   (mock (counsel-more-chars 2))
+   (mock (counsel-more-chars))
    (should (equal (funcall (counshell--function-wrapper t "" "") "") nil))))
 
 (ert-deftest counshell--function ()
