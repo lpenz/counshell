@@ -33,6 +33,17 @@
 (provide 'counshell)
 
 
+;; Options
+
+(defgroup counshell nil
+  "Ivy interface for grep-like shell commands"
+  :group 'external)
+
+(defcustom counshell-wait-for-space nil
+  "Only run the shell command when a space is the last character in the input"
+  :type 'boolean
+  :group 'counshell)
+
 ;; Misc functions
 
 (defun counshell--filepath (filename)
@@ -122,7 +133,11 @@ if there is no match, return nil."
   (let ((dir (if (and projectile (projectile-project-p))
                  (projectile-project-root)
                nil)))
-    (if (< (length str) 2)
+    (if (or (< (length str) 2)
+            (and
+             counshell-wait-for-space
+             (not (string= " " (substring str -1 nil)))))
+    ;; (if (< (length str) 2)
         (counsel-more-chars)
       (progn
         (counshell--create-script scriptfile dir (format "%s %s" prefix str))

@@ -179,6 +179,26 @@
    (mock (counsel--async-command "bash  </dev/null | cat") => nil)
    (should (equal (counshell--function t "" "ls" "counshell.el") '("" "working...")))))
 
+(ert-deftest counshell--function-shortstr ()
+  (with-mock
+   (mock (projectile-project-p) => nil)
+   (mock (counsel-more-chars))
+   (should (equal (counshell--function t "" "" "l") nil))))
+
+(ert-deftest counshell--function-waitspace1 ()
+  (let ((counshell-wait-for-space t))
+    (with-mock
+     (mock (projectile-project-p) => nil)
+     (mock (counsel-more-chars))
+     (should (equal (counshell--function t "" "" "ls") nil)))))
+
+(ert-deftest counshell--function-waitspace2 ()
+  (let ((counshell-wait-for-space t))
+    (with-mock
+     (mock (projectile-project-p) => nil)
+     (mock (counshell--create-script "" nil " ls ") => nil)
+     (mock (counsel--async-command "bash  </dev/null | cat") => nil)
+     (should (equal (counshell--function t "" "" "ls ") '("" "working..."))))))
 
 ;; Test other
 
