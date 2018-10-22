@@ -204,9 +204,15 @@
 
 ;; Test other
 
-(ert-deftest counshell-sh-read ()
+(ert-deftest counshell--sh-read-impl-test ()
   (with-mock
    (stub ivy-read => nil)
    (stub make-temp-file => "")
-   (should (equal (counshell-sh-read t "" "") nil))))
+   (should (equal (counshell--sh-read-impl t "" "") nil))))
 
+(ert-deftest counshell--sh-read-test ()
+  (with-mock
+   (stub yes-or-no-p => t)
+   (stub customize-save-variable => t)
+   (mock (counshell--sh-read-impl t "" "") => nil)
+   (should (equal (counshell-sh-read t "" "") nil))))

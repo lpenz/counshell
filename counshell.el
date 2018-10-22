@@ -44,6 +44,12 @@
   :type 'boolean
   :group 'counshell)
 
+(defcustom counshell-awareness-confirmed nil
+  "Signals that the user has confirmed that he is aware that commands
+are executed through the shell after every keystroke, by default"
+  :type 'boolean
+  :group 'counshell)
+
 ;; Misc functions
 
 (defun counshell--filepath (filename)
@@ -137,7 +143,6 @@ if there is no match, return nil."
             (and
              counshell-wait-for-space
              (not (string= " " (substring str -1 nil)))))
-    ;; (if (< (length str) 2)
         (counsel-more-chars)
       (progn
         (counshell--create-script scriptfile dir (format "%s %s" prefix str))
@@ -172,7 +177,7 @@ if there is no match, return nil."
   `(lambda () (progn (delete-file ,scriptfile)
                      (counsel-delete-process))))
 
-(defun counshell-sh-read (&optional projectile prefix initial)
+(defun counshell--sh-read-impl (&optional projectile prefix initial)
   "Invoke a subprocess through the shell.
 If PROJECTILE, run command in project directory.
 PREFIX is pre-pended to the ‘command-line’; allows pre-defined commands.
@@ -187,6 +192,20 @@ INITIAL is used to pre-populate the ‘command-line’."
               :action #'counshell--action
               :unwind (counshell--unwind scriptfile)
               :caller 'counshell)))
+
+(defun counshell--confirm-first-use ()
+  "Check to see if the user has already confirmed that he is aware of
+the shell behavior in counshell. If he has not confirmed yet, ask him,
+and store his answer."
+  (if (and (not counshell-awareness-confirmed) (not counshell-wait-for-space))
+      (if (yes-or-no-p "counshell runs its input through the shell by default, which can lead to unexpected results (you can change this behavior by customizing counshell-wait-for-space).\nPlease type yes to confirm that you are aware of the implications and want to use counshell: ")
+          (customize-save-variable 'counshell-awareness-confirmed t)
+        nil)
+    t))
+
+(defun counshell-sh-read (&optional projectile prefix initial)
+  "Run counshell--sh-read-impl when the user is aware of the implications"
+  (when (counshell--confirm-first-use) (counshell--sh-read-impl projectile prefix initial)))
 
 ;; API
 
