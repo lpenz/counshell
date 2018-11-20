@@ -263,6 +263,18 @@ INITIAL is used to pre-populate the ‘command-line’."
   (counshell-sh-read t "rg -n "))
 
 ;;;###autoload
+(defun counshell-fd ()
+  "Invoke fd in a subshell."
+  (interactive)
+  (counshell-sh-read nil "fd "))
+
+;;;###autoload
+(defun counshell-projectile-fd ()
+  "Invoke fd in a subshell."
+  (interactive)
+  (counshell-sh-read t "fd "))
+
+;;;###autoload
 (defun counshell-gnuglobal ()
   "Invoke GNU global in a subshell."
   (interactive)
