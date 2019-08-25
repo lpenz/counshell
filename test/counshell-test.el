@@ -170,7 +170,7 @@
 (ert-deftest counshell--function-wrapper ()
   (with-mock
    (mock (projectile-project-p) => nil)
-   (mock (counsel-more-chars))
+   (mock (ivy-more-chars))
    (should (equal (funcall (counshell--function-wrapper t "" "") "") nil))))
 
 (ert-deftest counshell--function ()
@@ -184,14 +184,14 @@
 (ert-deftest counshell--function-shortstr ()
   (with-mock
    (mock (projectile-project-p) => nil)
-   (mock (counsel-more-chars))
+   (mock (ivy-more-chars))
    (should (equal (counshell--function t "" "" "l") nil))))
 
 (ert-deftest counshell--function-waitspace1 ()
   (let ((counshell-wait-for-space t))
     (with-mock
      (mock (projectile-project-p) => nil)
-     (mock (counsel-more-chars))
+     (mock (ivy-more-chars))
      (should (equal (counshell--function t "" "" "ls") nil)))))
 
 (ert-deftest counshell--function-waitspace2 ()

@@ -138,7 +138,7 @@ if there is no match, return nil."
              counshell-wait-for-space
              (not (string= " " (substring str -1 nil)))))
     ;; (if (< (length str) 2)
-        (counsel-more-chars)
+        (ivy-more-chars)
       (progn
         (counshell--create-script scriptfile dir (format "%s %s" prefix str))
         (counsel--async-command (format "bash %s </dev/null | cat" scriptfile))
@@ -177,8 +177,7 @@ if there is no match, return nil."
 If PROJECTILE, run command in project directory.
 PREFIX is pre-pended to the ‘command-line’; allows pre-defined commands.
 INITIAL is used to pre-populate the ‘command-line’."
-  (let ((scriptfile (make-temp-file "counshell-command.sh."))
-        (ivy-format-function #'counshell--format))
+  (let ((scriptfile (make-temp-file "counshell-command.sh.")))
     (ivy-read (format "$ %s" (or prefix ""))
               (counshell--function-wrapper projectile scriptfile (or prefix ""))
               :initial-input (or initial "")
@@ -187,6 +186,8 @@ INITIAL is used to pre-populate the ‘command-line’."
               :action #'counshell--action
               :unwind (counshell--unwind scriptfile)
               :caller 'counshell)))
+
+(add-to-list 'ivy-format-functions-alist '(counshell . counshell--format))
 
 ;; API
 
