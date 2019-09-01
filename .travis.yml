@@ -3,7 +3,6 @@ language: generic
 env:
   - EVM_EMACS=emacs-25.1-travis
   - EVM_EMACS=emacs-25.2-travis
-  - EVM_EMACS=emacs-26.1-travis
 install:
   - true Download and install emacs version manager
   - curl -fsSkL https://raw.github.com/rejeep/evm/master/go | bash
