@@ -114,14 +114,14 @@
 
 (ert-deftest counshell--format-str-fileline ()
   (with-mock
-   (mock (ivy-add-face-text-property * * * "counshell.el:5: ok") => nil)
+   (mock (add-face-text-property * * * nil "counshell.el:5: ok") => nil)
    (should (equal
             (counshell--format-str "counshell.el:5: ok")
             "counshell.el:5: ok"))))
 
 (ert-deftest counshell--format-str-fileonly ()
   (with-mock
-   (mock (ivy-add-face-text-property * * * "counshell.el: ok") => nil)
+   (mock (add-face-text-property * * nil "counshell.el: ok") => nil)
    (should (equal
             (counshell--format-str "counshell.el: ok")
             "counshell.el: ok"))))

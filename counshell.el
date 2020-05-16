@@ -94,15 +94,15 @@ if there is no match, return nil."
       (ivy--add-face str 'file-name-shadow)
     (let ((matches (or (length (counshell--match-regexes str)) 0)))
       (when (> matches 0)
-        (ivy-add-face-text-property
+        (add-face-text-property
          (match-beginning 1) (match-end 1)
          'compilation-info
-         str))
+         nil str))
       (when (> matches 1)
-        (ivy-add-face-text-property
+        (add-face-text-property
          (match-beginning 2) (match-end 2)
          'compilation-line-number
-         str)))
+         nil str)))
     str))
 
 (defun counshell--format-str-current (str)
