@@ -3,6 +3,7 @@
 ;; Copyright (C) 2018  Leandro Lisboa Penz
 
 ;; Author: Leandro Lisboa Penz <lpenz@lpenz.org>
+;; Package-Requires: ((emacs "25.1") (swiper "0.10.0") (counsel "0.10.0") (projectile "0.14.0") (undercover "0.7.0") (el-mock "1.25.1") (f "0.20.0"))
 
 ;; This file is subject to the terms and conditions defined in
 ;; file 'LICENSE', which is part of this source code package.
@@ -12,23 +13,28 @@
 
 (require 'el-mock)
 
+(require 'f)
+
 (add-to-list 'load-path (f-parent (f-dirname load-file-name)))
 
 (require 'counshell)
 
+(setq ert-batch-backtrace-right-margin 8192)
 
 ;; Test counshell--filepath
 
 (ert-deftest counshell--filepath-noproject ()
   (with-mock
    (stub projectile-project-p => nil)
+   (mock (file-exists-p "counshell.el") => t)
    (should (equal (counshell--filepath "counshell.el") "counshell.el"))))
 
 (ert-deftest counshell--filepath-inproject ()
   (with-mock
    (stub projectile-project-p => t)
-   (stub projectile-expand-root => "counshell.el")
-   (should (equal (counshell--filepath "counshell.el") "counshell.el"))))
+   (stub projectile-expand-root => "/counshell/counshell.el")
+   (mock (file-exists-p "/counshell/counshell.el") => t)
+   (should (equal (counshell--filepath "counshell.el") "/counshell/counshell.el"))))
 
 (ert-deftest counshell--filepath-nofile ()
   (with-mock
@@ -121,7 +127,7 @@
 
 (ert-deftest counshell--format-str-fileonly ()
   (with-mock
-   (mock (add-face-text-property * * nil "counshell.el: ok") => nil)
+   (mock (add-face-text-property * * * nil "counshell.el: ok") => nil)
    (should (equal
             (counshell--format-str "counshell.el: ok")
             "counshell.el: ok"))))
@@ -153,7 +159,9 @@
 (ert-deftest counshell--action-line ()
   (with-mock
    (stub with-ivy-window => nil)
-   (mock (find-file (expand-file-name "counshell.el")) => nil)
+   (mock (projectile-project-p) => nil)
+   (mock (file-exists-p "counshell.el") => t)
+   (mock (find-file "counshell.el") => nil)
    (mock (goto-char 1) => nil)
    (mock (forward-line 4) => nil)
    (should (equal (counshell--action "counshell.el:5: ok") nil))))
