@@ -3,13 +3,13 @@
 ;; Copyright (C) 2018  Leandro Lisboa Penz
 
 ;; Author: Leandro Lisboa Penz <lpenz@lpenz.org>
-;; Package-Requires: ((emacs "25.1") (swiper "0.10.0") (counsel "0.10.0") (projectile "0.14.0") (undercover "0.7.0") (el-mock "1.25.1") (f "0.20.0"))
+;; Package-Requires: ((emacs "25.1") (swiper "0.10.0") (counsel "0.10.0") (projectile "0.14.0") (undercover "0.8.1") (el-mock "1.25.1") (f "0.20.0"))
 
 ;; This file is subject to the terms and conditions defined in
 ;; file 'LICENSE', which is part of this source code package.
 
 (require 'undercover)
-(undercover "*.el" (:report-type :codecov))
+(undercover "*.el" (:report-format 'lcov) (:send-report nil))
 
 (require 'el-mock)
 

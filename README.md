@@ -1,4 +1,5 @@
 [![CI](https://github.com/lpenz/counshell/actions/workflows/ci.yml/badge.svg)](https://github.com/lpenz/counshell/actions/workflows/ci.yml)
+[![coveralls](https://coveralls.io/repos/github/lpenz/counshell/badge.svg?branch=main)](https://coveralls.io/github/lpenz/counshell?branch=main)
 
 # counshell
 

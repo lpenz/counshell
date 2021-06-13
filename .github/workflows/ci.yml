@@ -2,38 +2,70 @@
 name: CI
 on: [ push, pull_request ]
 jobs:
-  lint:
-    strategy:
-      matrix:
-        checker:
-          - load-file
-          - byte-compile
-          - package-lint
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - uses: purcell/setup-emacs@v3.0
-        with:
-          version: 25.1
-      - uses: leotaku/elisp-check@v1.1
-        with:
-          check: ${{ matrix.checker }}
-          file: counshell.el
-          warnings_as_errors: true
-  check:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - uses: purcell/setup-emacs@v3.0
-        with:
-          version: 25.1
-      - uses: leotaku/elisp-check@v1.1
-        with:
-          check: ert
-          file: test/counshell-test.el
-          warnings_as_errors: true
   omnilint:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
       - uses: docker://lpenz/omnilint:v0.2
+  lint:
+    strategy:
+      matrix:
+        emacs_version:
+          - 25.3
+          - 26.3
+          - 27.1
+          - snapshot
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: purcell/setup-emacs@v3.0
+        with:
+          version: ${{ matrix.emacs_version }}
+      - uses: leotaku/elisp-check@v1.1
+        with:
+          check: load-file
+          file: counshell.el
+          warnings_as_errors: true
+      - uses: leotaku/elisp-check@v1.1
+        with:
+          check: byte-compile
+          file: counshell.el
+          warnings_as_errors: true
+      - uses: leotaku/elisp-check@v1.1
+        with:
+          check: package-lint
+          file: counshell.el
+          warnings_as_errors: true
+  coverage:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        emacs_version:
+          - 25.3
+          - 26.3
+          - 27.1
+          - snapshot
+    steps:
+      - uses: actions/checkout@v2
+      - uses: purcell/setup-emacs@v3.0
+        with:
+          version: ${{ matrix.emacs_version }}
+      - uses: conao3/setup-cask@v1.1.0
+      - name: Test
+        run: |
+          cask install
+          cask exec ert-runner
+      - run: find . -type f
+      - uses: coverallsapp/github-action@v1.1.2
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          flag-name: emacs-${{ matrix.emacs_version }}
+          parallel: true
+  coverage-upload:
+    needs: [ coverage ]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: coverallsapp/github-action@v1.1.2
+        with:
+          github-token: ${{ secrets.github_token }}
+          parallel-finished: true
