@@ -121,7 +121,8 @@ if there is no match, return nil."
 ;; Collection functions
 
 (defun counshell--create-script (scriptfile dir cmdline)
-  "Write to SCRIPTFILE the command to change the directory to DIR, followed by CMDLINE."
+  "Write to SCRIPTFILE the command to change the directory to DIR, followed by
+CMDLINE."
   (write-region "" nil scriptfile nil 0)
   (when dir (write-region (format "cd %s\n" dir) nil scriptfile t 0))
   (write-region (format "%s\n" cmdline) nil scriptfile t 0)
@@ -129,7 +130,9 @@ if there is no match, return nil."
   scriptfile)
 
 (defun counshell--function (projectile scriptfile prefix str)
-  "If PROJECTILE, go to project directory before writting SCRIPTFILE with PREFIX STR and running it using the shell - otherwise, keep dir unchanged.  If str size is <=2, do nothing."
+  "If PROJECTILE, go to project directory before writting SCRIPTFILE with PREFIX
+STR and running it using the shell - otherwise, keep dir unchanged.  If str size
+is <=2, do nothing."
   (let ((dir (if (and projectile (projectile-project-p))
                  (projectile-project-root)
                nil)))
@@ -145,7 +148,8 @@ if there is no match, return nil."
         '("" "working...")))))
 
 (defun counshell--function-wrapper (projectile scriptfile prefix)
-  "Return ‘counshell--function’ as a closure with pre-defined arguments PROJECTILE, SCRIPTFILE and PREFIX."
+  "Return ‘counshell--function’ as a closure with pre-defined arguments
+PROJECTILE, SCRIPTFILE and PREFIX."
   `(lambda (str)
      (counshell--function ,projectile ,scriptfile ,prefix str)))
 
