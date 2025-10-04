@@ -166,7 +166,7 @@
    (mock (forward-line 4) => nil)
    (should (equal (counshell--action "counshell.el:5: ok") nil))))
 
-(ert-deftest counshell--action-noline ()
+(ert-deftest counshell--action-nofile ()
   (with-mock
    (stub with-ivy-window => nil)
    (mock (message "File not found or unable to parse [x.el]") => nil)
